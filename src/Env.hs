@@ -1,102 +1,160 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns
+    -Wredundant-constraints #-}
 {-# LANGUAGE OverloadedStrings, PartialTypeSignatures #-}
 
 module Env
     ( convertBlock
+    , splitTerm
     ) where
 
+import Data.Sequence (Seq((:<|), (:|>)), (|>), (<|))
+import qualified Data.Sequence as S
+import Data.Text (Text)
 import qualified Data.Text as T
-import Text.Pandoc.JSON
+import Text.Pandoc.Builder
 
--- Represents an amsthm environment.
-data Env = Env 
-    Tag              -- Type of environment, e.g. Definition, Theorem, etc.
-    (Maybe String)   -- Name of the theorem, definition, etc.
-    [Inline]         -- Additional term inlines, e.g. \label{thm:1}
-    [Block]          -- Body of the environment.
+-- | Represents a LaTeX environment.
+data Env = Env
+    Tag             -- ^ Type of environment, e.g. Definition, Theorem, etc.
+    (Maybe String)  -- ^ Name of the theorem, definition, etc.
+    Inlines         -- ^ Additional term inlines, e.g. \label{thm:1}
+    Blocks          -- ^ Body of the environment.
     deriving (Show, Eq)
 
+-- | Type of a LaTeX environment. Corresponds to a unique environment name.
 data Tag = Definition | Lemma | Theorem | Proof | Claim
     deriving (Show, Eq)
 
--- Aliases for terms in a Pandoc DefinitionList.
+-- Aliases for terms in a DefinitionList.
 type Term = [Inline]
 type Definition = [Block]
 
--- Converts Pandoc AST blocks into theorem blocks.
-convertBlock :: Block -> [Block]
-convertBlock (DefinitionList terms) = terms >>= expandTerm
-    where expandTerm :: (Term, [Definition]) -> [Block]
-          expandTerm t = case matchTag t of
-                  Just env -> envToBlocks env
-                  Nothing -> [DefinitionList [t]]
-convertBlock x = [x]
+-- | Converts a DefinitionList block from the Pandoc AST into a theorem block,
+-- if the definition term starts with a recognized tag.
+convertBlock :: Block -> Blocks
+convertBlock (DefinitionList terms) = foldMap expandTerm terms
+  where
+    expandTerm :: (Term, [Definition]) -> Blocks
+    expandTerm (term, defs) =
+        let pieces = splitTerm (S.fromList term)
+        in  case makeEnv pieces defs of
+                Just (Env t n rest ds) -> front <> (Many $ combineBlocks (unMany ds) back)
+                    where (front, back) = makeDelimiters t n rest
+                Nothing -> definitionList [(fromList term, fromList <$> defs)]
+    -- If the last definition is a Para or Plain block, compress it with the final
+    -- Plain block to avoid an unsightly newline.
+    combineBlocks :: Seq Block -> Block -> Seq Block
+    combineBlocks (xs:|>Para xs') (Plain ys) =
+        xs |> Para (xs' <> ys)
+    combineBlocks (xs:|>Plain xs') (Plain ys) =
+        xs |> Plain (xs' <> ys)
+    combineBlocks ds back = ds |> back
 
--- Matches a definition pair to check if it's being overloaded as an environment.
-matchTag :: (Term, [Definition]) -> Maybe Env
-matchTag (term, defs) = case term of
-          -- Lemma. -> ["Lemma."]
-          [Str tag] -> makeEnvFromTag <$> parseTag (init tag)
-              where makeEnvFromTag :: Tag -> Env
-                    makeEnvFromTag t = Env t Nothing [] (concat defs)
-          -- Lemma (Lambek's). -> ["Lemma", Space, "(Lambek's)."]
-          -- Lemma (Lambek's). \label{lamb} -> ["Lemma", Space, "(Lambek's).", RawInline]
-          (Str tag):Space:(Str n):xs -> makeEnvFromTag <$> parseTag tag
-              where makeEnvFromTag :: Tag -> Env
-                    makeEnvFromTag t = Env t (parseName n) xs (concat defs)
-          _ -> Nothing
+-- Pass all other blocks through unmodified.
+convertBlock x = singleton x
 
--- Converts an environment to a list of Pandoc AST blocks.
-envToBlocks :: Env -> [Block]
-envToBlocks (Env tag name xs defs) = [front] ++ defs ++ [back]
-    where (front, back) = makeDelimiters tag name xs
+-- | Creates an environment representing a LaTeX environment block.
+makeEnv :: (Seq Inline, Seq Inline, Seq Inline) -> [Definition] -> Maybe Env
+makeEnv (tag, name, rest) defs
+    | null tag  = Nothing
+    | otherwise = fmap convertTag ((parseTag . T.strip . toRawText) tag)
+  where
+    convertTag :: Tag -> Env
+    convertTag t = Env t n (Many rest) (foldMap fromList defs)
+    n = if null name
+        then Nothing
+        else (Just . T.unpack . T.strip . toRawText) name
+    -- TODO: Might be useful to have this work with formatted tags, e.g. **Lemma**.
+    toRawText :: Seq Inline -> Text
+    toRawText S.Empty      = ""
+    toRawText (Str s:<|xs) = (T.pack s) `T.append` (toRawText xs)
+    toRawText (Space:<|xs) = " " `T.append` (toRawText xs)
+    toRawText (_    :<|xs) = toRawText xs
 
 -- Defines the first and last blocks of the TeX environment.
-makeDelimiters :: Tag -> Maybe String -> [Inline] -> (Block, Block)
-makeDelimiters tagText nameText xs =
-    ( makeTexBlock $ "\\begin{" ++ tag ++ "}" ++ name
-    , makeTexBlock $   "\\end{" ++ tag ++ "}"
+makeDelimiters :: Tag -> Maybe String -> Inlines -> (Blocks, Block)
+makeDelimiters tagText nameText rest =
+    ( plain $ (rawInline "latex" $ "\\begin{" ++ tag ++ "}" ++ name) <> rest
+      -- Closing block may be merged into the final body block, so keep it
+      -- independent of other blocks for now.
+    , Plain [SoftBreak, RawInline (Format "latex") ("\\end{" ++ tag ++ "}")]
     )
-    where makeTexBlock :: String -> Block
-          makeTexBlock s = Plain $ [RawInline (Format "tex") s] ++ xs
-          tag = getLatexEnvName tagText
-          name = case nameText of
-                   Just n -> "[" ++ n ++ "]"
-                   Nothing -> ""
+  where
+    tag  = getLatexEnvName tagText
+    name = case nameText of
+        Just n  -> "[" ++ n ++ "]"
+        Nothing -> ""
 
--- Parses a definition list term to see if it's being used as a theorem.
-parseTag :: String -> Maybe Tag
+-- Maps definition terms to Env types.
+-- TODO: Allow the user to define their own aliases in frontmatter.
+parseTag :: Text -> Maybe Tag
 parseTag txt = case txt of
-                "Claim" -> Just Claim
-                "Def" -> Just Definition
-                "Definition" -> Just Definition
-                "Lemma" -> Just Lemma
-                "Pf" -> Just Proof
-                "Proof" -> Just Proof
-                "Thm" -> Just Theorem
-                "Theorem" -> Just Theorem
-                _ -> Nothing
+    "Claim"      -> Just Claim
+    "Def"        -> Just Definition
+    "Definition" -> Just Definition
+    "Lemma"      -> Just Lemma
+    "Pf"         -> Just Proof
+    "Proof"      -> Just Proof
+    "Thm"        -> Just Theorem
+    "Theorem"    -> Just Theorem
+    _            -> Nothing
 
--- Tries to extract the title out of a parenthesized string.
--- "(Lambek's)." |-> "Lambek's"
-parseName :: String -> Maybe String
-parseName name = T.unpack <$> name'
-    where n = T.pack name
-          -- Delete trailing period.
-          name' = case T.stripSuffix "." n of
-                -- Try to unwrap parens.
-                Just n' -> case T.stripPrefix "(" n' of
-                             Just n'' -> T.stripSuffix ")" n''
-                             -- If no opening paren exists, return the original name.
-                             Nothing -> Just n'
-                -- If no trailing period, just return the original name.
-                Nothing -> Just n
-
--- Maps a Tag to the corresponding amsthm environment.
+-- Maps a Tag to the corresponding environment name (the `foo` in `\begin{foo}`).
 getLatexEnvName :: Tag -> String
 getLatexEnvName e = case e of
-                Claim -> "claim"
-                Definition -> "definition"
-                Lemma -> "lemma"
-                Proof -> "proof"
-                Theorem -> "theorem"
+    Claim      -> "claim"
+    Definition -> "definition"
+    Lemma      -> "lemma"
+    Proof      -> "proof"
+    Theorem    -> "theorem"
+
+-- Splits term text into the metadata of a LaTeX environment.
+-- TODO: Add support for nested parens, e.g. "Definition (O(n) runtime)."
+splitTerm :: Seq Inline -> (Seq Inline, Seq Inline, Seq Inline)
+splitTerm xs =
+    let (tag, xs') = S.breakl opensParen withoutPeriods
+    in  case splitAfter closesParen xs' of
+            (S.Empty, S.Empty) -> (tag, S.Empty, S.Empty)
+            (name   , xs''   ) -> (tag, trimParens name, xs'')
+  where
+    withoutPeriods = fmap (dropSuffix ".") xs
+    opensParen :: Inline -> Bool
+    opensParen = checkStr (T.isPrefixOf "(")
+    closesParen :: Inline -> Bool
+    closesParen = checkStr (T.isSuffixOf ")")
+
+checkStr :: (Text -> Bool) -> Inline -> Bool
+checkStr f (Str s) = f (T.pack s)
+checkStr _ _       = False
+
+trimParens :: Seq Inline -> Seq Inline
+trimParens S.Empty = S.Empty
+trimParens xs = applyToLast (dropSuffix ")") $ applyToFirst (dropPrefix "(") xs
+
+shiftPartition :: (Seq a, Seq a) -> (Seq a, Seq a)
+shiftPartition (S.Empty, y:<|ys) = (S.singleton y, ys)
+shiftPartition (xs     , y:<|ys) = (xs |> y, ys)
+shiftPartition x                 = x
+
+splitAfter :: (Inline -> Bool) -> Seq Inline -> (Seq Inline, Seq Inline)
+splitAfter f s = shiftPartition (S.breakl f s)
+
+applyToFirst :: (a -> a) -> Seq a -> Seq a
+applyToFirst _ S.Empty  = S.Empty
+applyToFirst f (x:<|xs) = (f x) <| xs
+
+applyToLast :: (a -> a) -> Seq a -> Seq a
+applyToLast _ S.Empty  = S.Empty
+applyToLast f (xs:|>x) = xs |> (f x)
+
+dropSuffix :: Text -> Inline -> Inline
+dropSuffix = transformStr . T.stripSuffix
+
+dropPrefix :: Text -> Inline -> Inline
+dropPrefix = transformStr . T.stripPrefix
+
+transformStr :: (Text -> Maybe Text) -> Inline -> Inline
+transformStr f i@(Str s) = case f (T.pack s) of
+    Just s' -> Str $ T.unpack s'
+    Nothing -> i
+transformStr _ i = i

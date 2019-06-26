@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>test</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  \usepackage{amsthm}
+  \newtheorem{definition}{Definition}
+  \newtheorem{lemma}{Lemma}
+  \newtheorem{theorem}{Theorem}
+</head>
+<body>
+ Lemma). 
+<p>Let <span class="math inline"><em>L</em></span> be a regular language. Then there exists an integer <span class="math inline"><em>p</em> ≥ 1</span> called the “pumping length” which depends only on <span class="math inline"><em>L</em></span>, such that every string <span class="math inline"><em>w</em> ∈ <em>L</em></span> of length at least <span class="math inline"><em>p</em></span> can be divided into three substrings <span class="math inline"><em>w</em> = <em>x</em><em>y</em><em>z</em></span> such that the following conditions hold:</p>
+<ul>
+<li><span class="math inline">|<em>y</em>| ≥ 1</span></li>
+<li><span class="math inline">|<em>x</em><em>y</em>| ≤ <em>p</em></span></li>
+<li><span class="math inline"><em>x</em><em>y</em><sup><em>n</em></sup><em>z</em> ∈ <em>L</em></span>, for all <span class="math inline"><em>n</em> ≥ 0</span>.</li>
+</ul>
+<p>That is, the non-empty substring <span class="math inline"><em>y</em></span> occurring within the first <span class="math inline"><em>p</em></span> characters of <span class="math inline"><em>w</em></span> can be “pumped” any number of times, and the resulting string is always in <span class="math inline"><em>L</em></span>.</p>
+ Lemma).
+</body>
+</html>

@@ -24,6 +24,7 @@ dependencies:
 - pandoc
 - pandoc-types
 - text
+- containers
 
 library:
   source-dirs: src
@@ -49,3 +50,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - pandoc-theorem
+    - hspec
