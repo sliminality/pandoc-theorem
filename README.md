@@ -151,7 +151,7 @@ Theorem (Hedberg).
 :   Any type with decidable equality is a set.
 ```
 
-![Compiled LaTeX PDF for simple block-level theorem](examples/example-block.png)
+![Compiled LaTeX PDF for simple block-level theorem](examples/example-simple.png)
 
 ### Complex block-level theorem
 
