@@ -183,7 +183,7 @@ Proof.
 ### Multiple inline theorems
 
 ```markdown
-Def (Agda).
+Def (Coq).
 :   A dependently-typed programming language often used for interactive theorem proving.
 :   A video game that doesn't mean you understand the underlying theory, according to Bob.
 ```
