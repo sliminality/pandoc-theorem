@@ -6,7 +6,7 @@ Theorem (Hedberg).
 
 ## Complex block-level theorem
 
-Lemma (Pumping Lemma). \label{lem}
+Lemma (Pumping Lemming). \label{lem}
 
 :   Let $L$ be a regular language. Then there exists an integer $p \geq 1$ called the "pumping length" which depends only on $L$, such that every string $w \in L$ of length at least $p$ can be divided into three substrings $w = xyz$ such that the following conditions hold:
 

@@ -20,7 +20,7 @@ Note that compilation targets other than PDF and LaTeX have not been tested. Not
 Given the following Markdown:
 
 ```markdown
-Lemma (Pumping Lemma). \label{pumping}
+Lemma (Pumping Lemming). \label{pumping}
 
 :   Let $L$ be a regular language. Then there exists an integer $p \geq 1$ called the "pumping length" which depends only on $L$, such that every string $w \in L$ of length at least $p$ can be divided into three substrings $w = xyz$ such that the following conditions hold:
 
@@ -38,7 +38,7 @@ we transform it into this PDF output:
 equivalent to this LaTeX:
 
 ```latex
-\begin{lemma}[Pumping Lemma] \label{lem}
+\begin{lemma}[Pumping Lemming] \label{lem}
 
 Let \(L\) be a regular language. Then there exists an integer
 \(p \geq 1\) called the ``pumping length'' which depends only on \(L\),
@@ -158,7 +158,7 @@ Theorem (Hedberg).
 ### Complex block-level theorem
 
 ```markdown
-Lemma (Pumping Lemma). \label{lem}
+Lemma (Pumping Lemming). \label{lem}
 
 :   Let $L$ be a regular language. Then there exists an integer $p \geq 1$ called the "pumping length" which depends only on $L$, such that every string $w \in L$ of length at least $p$ can be divided into three substrings $w = xyz$ such that the following conditions hold:
 
@@ -192,7 +192,7 @@ Def (Coq).
 
 ### Regular definition lists still work
 
-If you do not use 
+If you do not start a definition list with one of the [recognized identifiers](#identifiers), the definition list will compile as usual.
 
 ```markdown
 Groceries
