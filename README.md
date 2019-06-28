@@ -69,11 +69,13 @@ resulting string is always in \(L\).
 
 You must have Pandoc installed and available in your PATH.
 
-Clone and `stack install` this repository, which copies the `pandoc-theorem-exe` binary to your global Stack install location. Now `pandoc-theorem-exe` should be in your PATH as well.
+You can either download a prebuilt binary from the [Releases](https://github.com/sarahlim/pandoc-theorem/releases/) page, or clone and `stack install` this repository, which copies the `pandoc-theorem-exe` binary to your global Stack install location.
+
+Check that `pandoc-theorem-exe` is in your PATH:
 
 ```
 $ which pandoc-theorem-exe
-/Users/slim/.local/bin/pandoc-theorem-exe
+/Users/slim/.local/bin/pandoc-theorem-exe # or a different path
 ```
 
 ### Syntax
