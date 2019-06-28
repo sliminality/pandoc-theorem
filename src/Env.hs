@@ -77,7 +77,7 @@ makeDelimiters tagText nameText rest =
     ( plain $ (rawInline "latex" $ "\\begin{" ++ tag ++ "}" ++ name) <> rest
       -- Closing block may be merged into the final body block, so keep it
       -- independent of other blocks for now.
-    , Plain [SoftBreak, RawInline (Format "latex") ("\\end{" ++ tag ++ "}")]
+    , Plain [RawInline (Format "latex") ("\\end{" ++ tag ++ "}")]
     )
   where
     tag  = getLatexEnvName tagText
