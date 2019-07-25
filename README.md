@@ -12,6 +12,8 @@ The extension supports the following theorem environments:
 | `theorem` | `Theorem`, `Thm` |
 | `lemma` | `Lemma` |
 | `proof` | `Proof`, `Pf` |
+| `example` | `Example`, `Ex` |
+| `assumption` | `Assumption` |
 
 Note that compilation targets other than PDF and LaTeX have not been tested. Notably, this includes HTML.
 
@@ -135,6 +137,8 @@ Note that you will always need to include the following header file using Pandoc
 \newtheorem{definition}{Definition}
 \newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{assumption}{Assumption}
 ```
 
 ## Examples
