@@ -11,7 +11,7 @@ import Data.Sequence (Seq((:<|), (:|>)), (|>), (<|))
 import qualified Data.Sequence as S
 import Data.Text (Text)
 import qualified Data.Text as T
-import Text.Pandoc.Builder
+import Text.Pandoc.Builder hiding (Example)
 
 -- | Represents a LaTeX environment.
 data Env = Env
@@ -22,7 +22,7 @@ data Env = Env
     deriving (Show, Eq)
 
 -- | Type of a LaTeX environment. Corresponds to a unique environment name.
-data Tag = Definition | Lemma | Theorem | Proof | Claim
+data Tag = Definition | Lemma | Theorem | Proof | Claim | Example | Assumption
     deriving (Show, Eq)
 
 -- Aliases for terms in a DefinitionList.
@@ -97,6 +97,9 @@ parseTag txt = case txt of
     "Proof"      -> Just Proof
     "Thm"        -> Just Theorem
     "Theorem"    -> Just Theorem
+    "Ex"         -> Just Example
+    "Example"    -> Just Example
+    "Assumption" -> Just Assumption
     _            -> Nothing
 
 -- Maps a Tag to the corresponding environment name (the `foo` in `\begin{foo}`).
@@ -107,6 +110,8 @@ getLatexEnvName e = case e of
     Lemma      -> "lemma"
     Proof      -> "proof"
     Theorem    -> "theorem"
+    Example    -> "example"
+    Assumption -> "assumption"
 
 -- Splits term text into the metadata of a LaTeX environment.
 -- TODO: Add support for nested parens, e.g. "Definition (O(n) runtime)."
