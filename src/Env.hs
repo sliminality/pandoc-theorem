@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns
     -Wredundant-constraints #-}
+
 {-# LANGUAGE OverloadedStrings, PartialTypeSignatures #-}
 
 module Env
@@ -22,7 +23,7 @@ data Env = Env
     deriving (Show, Eq)
 
 -- | Type of a LaTeX environment. Corresponds to a unique environment name.
-data Tag = Definition | Lemma | Theorem | Proof | Claim | Example | Assumption
+data Tag = Definition | Lemma | Theorem | Corollary | Proposition | Proof | Problem | Claim | Example | Assumption
     deriving (Show, Eq)
 
 -- Aliases for terms in a DefinitionList.
@@ -67,17 +68,17 @@ makeEnv (tag, name, rest) defs
     -- TODO: Might be useful to have this work with formatted tags, e.g. **Lemma**.
     toRawText :: Seq Inline -> Text
     toRawText S.Empty      = ""
-    toRawText (Str s:<|xs) = (T.pack s) `T.append` (toRawText xs)
+    toRawText (Str s:<|xs) = (s) `T.append` (toRawText xs)
     toRawText (Space:<|xs) = " " `T.append` (toRawText xs)
     toRawText (_    :<|xs) = toRawText xs
 
 -- Defines the first and last blocks of the TeX environment.
 makeDelimiters :: Tag -> Maybe String -> Inlines -> (Blocks, Block)
 makeDelimiters tagText nameText rest =
-    ( plain $ (rawInline "latex" $ "\\begin{" ++ tag ++ "}" ++ name) <> rest
+    ( plain $ (rawInline "latex" $ T.pack $ "\\begin{" ++ tag ++ "}" ++ name) <> rest
       -- Closing block may be merged into the final body block, so keep it
       -- independent of other blocks for now.
-    , Plain [RawInline (Format "latex") ("\\end{" ++ tag ++ "}")]
+    , Plain [RawInline (Format "latex") $ T.pack ("\\end{" ++ tag ++ "}")]
     )
   where
     tag  = getLatexEnvName tagText
@@ -89,29 +90,35 @@ makeDelimiters tagText nameText rest =
 -- TODO: Allow the user to define their own aliases in frontmatter.
 parseTag :: Text -> Maybe Tag
 parseTag txt = case txt of
-    "Claim"      -> Just Claim
-    "Def"        -> Just Definition
-    "Definition" -> Just Definition
-    "Lemma"      -> Just Lemma
-    "Pf"         -> Just Proof
-    "Proof"      -> Just Proof
-    "Thm"        -> Just Theorem
-    "Theorem"    -> Just Theorem
-    "Ex"         -> Just Example
-    "Example"    -> Just Example
-    "Assumption" -> Just Assumption
-    _            -> Nothing
+    "Claim"       -> Just Claim
+    "Def"         -> Just Definition
+    "Definition"  -> Just Definition
+    "Lemma"       -> Just Lemma
+    "Proposition" -> Just Proposition 
+    "Corollary"   -> Just Corollary
+    "Pf"          -> Just Proof
+    "Proof"       -> Just Proof
+    "Problem"     -> Just Problem 
+    "Thm"         -> Just Theorem
+    "Theorem"     -> Just Theorem
+    "Ex"          -> Just Example
+    "Example"     -> Just Example
+    "Assumption"  -> Just Assumption
+    _             -> Nothing
 
 -- Maps a Tag to the corresponding environment name (the `foo` in `\begin{foo}`).
 getLatexEnvName :: Tag -> String
 getLatexEnvName e = case e of
-    Claim      -> "claim"
-    Definition -> "definition"
-    Lemma      -> "lemma"
-    Proof      -> "proof"
-    Theorem    -> "theorem"
-    Example    -> "example"
-    Assumption -> "assumption"
+    Claim       -> "claim"
+    Definition  -> "definition"
+    Lemma       -> "lemma"
+    Proof       -> "proof"
+    Problem     -> "problem"
+    Theorem     -> "theorem"
+    Proposition -> "proposition"
+    Corollary   -> "corollary"
+    Example     -> "example"
+    Assumption  -> "assumption"
 
 -- Splits term text into the metadata of a LaTeX environment.
 -- TODO: Add support for nested parens, e.g. "Definition (O(n) runtime)."
@@ -129,7 +136,7 @@ splitTerm xs =
     closesParen = checkStr (T.isSuffixOf ")")
 
 checkStr :: (Text -> Bool) -> Inline -> Bool
-checkStr f (Str s) = f (T.pack s)
+checkStr f (Str s) = f (s)
 checkStr _ _       = False
 
 trimParens :: Seq Inline -> Seq Inline
@@ -159,7 +166,7 @@ dropPrefix :: Text -> Inline -> Inline
 dropPrefix = transformStr . T.stripPrefix
 
 transformStr :: (Text -> Maybe Text) -> Inline -> Inline
-transformStr f i@(Str s) = case f (T.pack s) of
-    Just s' -> Str $ T.unpack s'
+transformStr f i@(Str s) = case f (s) of
+    Just s' -> Str $ s'
     Nothing -> i
 transformStr _ i = i
