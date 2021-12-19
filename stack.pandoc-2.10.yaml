@@ -1,0 +1,10 @@
+resolver: lts-16.31
+
+# pandoc 2.10 relies on pandoc-types 1.21, but the latter
+# is not in a Stackage LTS snapshot, so we have to manually
+# include it here.
+extra-deps:
+- pandoc-types-1.21
+
+packages:
+- .
