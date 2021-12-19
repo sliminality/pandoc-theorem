@@ -16,7 +16,7 @@ import Text.Pandoc.Builder hiding (Example)
 -- | Represents a LaTeX environment.
 data Env = Env
     Tag             -- ^ Type of environment, e.g. Definition, Theorem, etc.
-    (Maybe String)  -- ^ Name of the theorem, definition, etc.
+    (Maybe Text)    -- ^ Name of the theorem, definition, etc.
     Inlines         -- ^ Additional term inlines, e.g. \label{thm:1}
     Blocks          -- ^ Body of the environment.
     deriving (Show, Eq)
@@ -63,7 +63,7 @@ makeEnv (tag, name, rest) defs
     convertTag t = Env t n (Many rest) (foldMap fromList defs)
     n = if null name
         then Nothing
-        else (Just . T.unpack . T.strip . toRawText) name
+        else (Just . T.strip . toRawText) name
     -- TODO: Might be useful to have this work with formatted tags, e.g. **Lemma**.
     toRawText :: Seq Inline -> Text
     toRawText S.Empty      = ""
@@ -72,17 +72,17 @@ makeEnv (tag, name, rest) defs
     toRawText (_    :<|xs) = toRawText xs
 
 -- Defines the first and last blocks of the TeX environment.
-makeDelimiters :: Tag -> Maybe String -> Inlines -> (Blocks, Block)
+makeDelimiters :: Tag -> Maybe Text -> Inlines -> (Blocks, Block)
 makeDelimiters tagText nameText rest =
-    ( plain $ (rawInline "latex" $ T.pack("\\begin{" ++ tag ++ "}" ++ name)) <> rest
+    ( plain $ (rawInline "latex" $ "\\begin{" <> tag <> "}" <> name) <> rest
       -- Closing block may be merged into the final body block, so keep it
       -- independent of other blocks for now.
-    , Plain [RawInline (Format "latex") (T.pack("\\end{" ++ tag ++ "}"))]
+    , Plain [RawInline (Format "latex") ("\\end{" <> tag <> "}")]
     )
   where
     tag  = getLatexEnvName tagText
     name = case nameText of
-        Just n  -> "[" ++ n ++ "]"
+        Just n  -> "[" <> n <> "]"
         Nothing -> ""
 
 -- Maps definition terms to Env types.
@@ -103,7 +103,7 @@ parseTag txt = case txt of
     _            -> Nothing
 
 -- Maps a Tag to the corresponding environment name (the `foo` in `\begin{foo}`).
-getLatexEnvName :: Tag -> String
+getLatexEnvName :: Tag -> Text
 getLatexEnvName e = case e of
     Claim      -> "claim"
     Definition -> "definition"

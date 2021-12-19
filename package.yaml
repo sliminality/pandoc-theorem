@@ -21,8 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
-- pandoc
-- pandoc-types
+- pandoc-types >= 1.20
 - text
 - containers
 
