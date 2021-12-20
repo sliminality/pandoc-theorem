@@ -8,6 +8,7 @@ The extension supports the following theorem environments:
 
 | Supported environment | Supported Markdown identifiers |
 |-|-|
+| `claim` | `Claim` |
 | `definition` | `Definition`, `Def` |
 | `theorem` | `Theorem`, `Thm` |
 | `lemma` | `Lemma` |
@@ -111,12 +112,31 @@ Note that you will always need to include the following header file using Pandoc
 ```latex
 % examples/header.tex
 \usepackage{amsthm}
+\newtheorem{claim}{Claim}
 \newtheorem{definition}{Definition}
 \newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
 \newtheorem{example}{Example}
 \newtheorem{assumption}{Assumption}
 ```
+
+You can also define these environments directly in the document, using YAML frontmatter to avoid passing `-H="header.tex"`:
+
+```md
+---
+title: Glamorous paper
+header-includes:
+    \usepackage{amsthm}
+    \newtheorem{claim}{Claim}
+    \newtheorem{definition}{Definition}
+    \newtheorem{lemma}{Lemma}
+    \newtheorem{theorem}{Theorem}
+    \newtheorem{example}{Example}
+    \newtheorem{assumption}{Assumption}
+---
+```
+
+Finally, you can choose to add these environments directly to your chosen template, eliminating the need to define them in every document.
 
 ### Syntax
 
