@@ -65,19 +65,57 @@ resulting string is always in \(L\).
 \end{lemma}
 ```
 
-## Usage
+## Installation
 
-### Installation
+You must have pandoc 2.8 or greater installed and available in your PATH.
 
-You must have Pandoc installed and available in your PATH.
+If you are on pandoc 2.11 or later, you can either download a prebuilt binary from the [Releases](https://github.com/sarahlim/pandoc-theorem/releases/) page, or clone and `stack install` this repository, which copies the `pandoc-theorem-exe` binary to your global Stack install location.
 
-You can either download a prebuilt binary from the [Releases](https://github.com/sarahlim/pandoc-theorem/releases/) page, or clone and `stack install` this repository, which copies the `pandoc-theorem-exe` binary to your global Stack install location.
+```bash
+cd pandoc-theorem
+stack install
+```
 
 Check that `pandoc-theorem-exe` is in your PATH:
 
-```
-$ which pandoc-theorem-exe
+```bash
+> which pandoc-theorem-exe
 /Users/slim/.local/bin/pandoc-theorem-exe # or a different path
+```
+
+### Older versions of pandoc
+
+You may need to build from source to use this filter with earlier versions of pandoc.
+
+You can use the provided alternate `stack.yaml` files:
+
+```bash
+stack install --stack-yaml="stack.pandoc-2.8.yaml" # 2.8 and 2.9
+stack install --stack-yaml="stack.pandoc-2.10.yaml" # 2.10
+```
+
+## Usage
+
+To use, pass the `pandoc-theorem-exe` executable as a filter to [Pandoc](https://pandoc.org/):
+
+```sh
+# Compile to PDF.
+pandoc --filter pandoc-theorem-exe input.md -H header.tex -o output.pdf
+
+# Output LaTeX.
+pandoc --filter pandoc-theorem-exe input.md -H header.tex -t latex
+```
+
+Note that you will always need to include the following header file using Pandoc's `-H` flag:
+
+```latex
+% examples/header.tex
+\usepackage{amsthm}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{assumption}{Assumption}
 ```
 
 ### Syntax
@@ -116,30 +154,6 @@ Supported `<identifier>` values are [documented](#identifiers).
 Confused about indentation, line spacing, or the `:` characters? Consult the documentated syntax for Pandoc [definition lists](https://pandoc.org/MANUAL.html#definition-lists).
 
 More examples can be found in the [Examples](#examples) section below.
-
-### Compilation
-
-To use, pass the `pandoc-theorem-exe` executable as a filter to [Pandoc](https://pandoc.org/):
-
-```sh
-# Compile to PDF.
-pandoc --filter pandoc-theorem-exe input.md -H header.tex -o output.pdf
-
-# Output LaTeX.
-pandoc --filter pandoc-theorem-exe input.md -H header.tex -t latex
-```
-
-Note that you will always need to include the following header file using Pandoc's `-H` flag:
-
-```latex
-% examples/header.tex
-\usepackage{amsthm}
-\newtheorem{definition}{Definition}
-\newtheorem{lemma}{Lemma}
-\newtheorem{theorem}{Theorem}
-\newtheorem{example}{Example}
-\newtheorem{assumption}{Assumption}
-```
 
 ## Examples
 

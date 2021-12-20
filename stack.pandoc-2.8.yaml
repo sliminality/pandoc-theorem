@@ -1,0 +1,4 @@
+# pandoc 2.8 relies on pandoc-types 1.20, which lives in lts-16.31.
+resolver: lts-16.31
+packages:
+- .
