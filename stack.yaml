@@ -1,4 +1,5 @@
-resolver: lts-20.15
+#resolver: lts-20.15
+resolver:  lts-21.10
 packages:
 - .
 # Dependency packages to be pulled from upstream that are not in the resolver
