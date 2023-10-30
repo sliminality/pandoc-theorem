@@ -22,7 +22,7 @@ data Env = Env
     deriving (Show, Eq)
 
 -- | Type of a LaTeX environment. Corresponds to a unique environment name.
-data Tag = Definition | Lemma | Theorem | Proof | Claim | Example | Assumption
+data Tag = Definition | Lemma | Theorem | Proof | Claim | Example | Assumption | Proposition
     deriving (Show, Eq)
 
 -- Aliases for terms in a DefinitionList.
@@ -89,18 +89,20 @@ makeDelimiters tagText nameText rest =
 -- TODO: Allow the user to define their own aliases in frontmatter.
 parseTag :: Text -> Maybe Tag
 parseTag txt = case txt of
-    "Claim"      -> Just Claim
-    "Def"        -> Just Definition
-    "Definition" -> Just Definition
-    "Lemma"      -> Just Lemma
-    "Pf"         -> Just Proof
-    "Proof"      -> Just Proof
-    "Thm"        -> Just Theorem
-    "Theorem"    -> Just Theorem
-    "Ex"         -> Just Example
-    "Example"    -> Just Example
-    "Assumption" -> Just Assumption
-    _            -> Nothing
+    "Claim"       -> Just Claim
+    "Def"         -> Just Definition
+    "Definition"  -> Just Definition
+    "Lemma"       -> Just Lemma
+    "Pf"          -> Just Proof
+    "Proof"       -> Just Proof
+    "Thm"         -> Just Theorem
+    "Theorem"     -> Just Theorem
+    "Ex"          -> Just Example
+    "Example"     -> Just Example
+    "Assumption"  -> Just Assumption
+    "Prop"        -> Just Proposition
+    "Proposition" -> Just Proposition
+    _             -> Nothing
 
 -- Maps a Tag to the corresponding environment name (the `foo` in `\begin{foo}`).
 getLatexEnvName :: Tag -> Text
@@ -112,6 +114,7 @@ getLatexEnvName e = case e of
     Theorem    -> "theorem"
     Example    -> "example"
     Assumption -> "assumption"
+    Proposition -> "proposition"
 
 -- Splits term text into the metadata of a LaTeX environment.
 -- TODO: Add support for nested parens, e.g. "Definition (O(n) runtime)."
