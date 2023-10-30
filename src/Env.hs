@@ -107,13 +107,13 @@ parseTag txt = case txt of
 -- Maps a Tag to the corresponding environment name (the `foo` in `\begin{foo}`).
 getLatexEnvName :: Tag -> Text
 getLatexEnvName e = case e of
-    Claim      -> "claim"
-    Definition -> "definition"
-    Lemma      -> "lemma"
-    Proof      -> "proof"
-    Theorem    -> "theorem"
-    Example    -> "example"
-    Assumption -> "assumption"
+    Claim       -> "claim"
+    Definition  -> "definition"
+    Lemma       -> "lemma"
+    Proof       -> "proof"
+    Theorem     -> "theorem"
+    Example     -> "example"
+    Assumption  -> "assumption"
     Proposition -> "proposition"
 
 -- Splits term text into the metadata of a LaTeX environment.
