@@ -120,12 +120,12 @@ getLatexEnvName e = case e of
 -- TODO: Add support for nested parens, e.g. "Definition (O(n) runtime)."
 splitTerm :: Seq Inline -> (Seq Inline, Seq Inline, Seq Inline)
 splitTerm xs =
-    let (tag, xs') = S.breakl opensParen withoutPeriods
-    in  case splitAfter closesParen xs' of
-            (S.Empty, S.Empty) -> (tag, S.Empty, S.Empty)
-            (name   , xs''   ) -> (tag, trimParens name, xs'')
+    let (tagName, rest) = splitAfter (checkStr (T.isSuffixOf ".")) xs
+    in  case S.breakl opensParen tagName of
+            (tag, S.Empty) -> (withoutPeriods tag, S.Empty, rest)
+            (tag, name   ) -> (tag, trimParens . withoutPeriods $ name, rest)
   where
-    withoutPeriods = fmap (dropSuffix ".") xs
+    withoutPeriods xs = fmap (dropSuffix ".") xs
     opensParen :: Inline -> Bool
     opensParen = checkStr (T.isPrefixOf "(")
     closesParen :: Inline -> Bool
