@@ -124,11 +124,9 @@ splitTerm xs =
             (tag, S.Empty) -> (withoutPeriods tag, S.Empty, rest)
             (tag, name   ) -> (tag, trimParens . withoutPeriods $ name, rest)
   where
-    withoutPeriods xs = fmap (dropSuffix ".") xs
+    withoutPeriods = fmap (dropSuffix ".")
     opensParen :: Inline -> Bool
     opensParen = checkStr (T.isPrefixOf "(")
-    closesParen :: Inline -> Bool
-    closesParen = checkStr (T.isSuffixOf ")")
 
 checkStr :: (Text -> Bool) -> Inline -> Bool
 checkStr f (Str s) = f s
