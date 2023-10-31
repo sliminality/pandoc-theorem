@@ -117,7 +117,6 @@ getLatexEnvName e = case e of
     Proposition -> "proposition"
 
 -- Splits term text into the metadata of a LaTeX environment.
--- TODO: Add support for nested parens, e.g. "Definition (O(n) runtime)."
 splitTerm :: Seq Inline -> (Seq Inline, Seq Inline, Seq Inline)
 splitTerm xs =
     let (tagName, rest) = splitAfter (checkStr (T.isSuffixOf ".")) xs
