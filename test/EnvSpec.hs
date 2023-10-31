@@ -45,6 +45,18 @@ splitTermSpec = describe "splitTerm" $ do
                        , S.fromList [Space, Str "\\label{eqn:1}"]
                        )
 
+    it "parses a tag and additional data" $ do
+        makeInput "Lemma. \\label{eqn:1}"
+            `shouldBe` (S.fromList [Str "Lemma"], S.empty, S.fromList [Space, Str "\\label{eqn:1}"])
+
+    it "parses a tag and name with nested parens" $ do
+        makeInput "Definition (O(n) runtime)."
+            `shouldBe` ( S.fromList [Str "Definition", Space]
+                       , S.fromList [Str "O(n)", Space, Str "runtime"]
+                       , S.empty
+                       )
+
+
 convertBlockSpec :: Spec
 convertBlockSpec = describe "convertBlock" $ do
     it "extracts definitions into the environment body" $ do

@@ -22,7 +22,7 @@ data Env = Env
     deriving (Show, Eq)
 
 -- | Type of a LaTeX environment. Corresponds to a unique environment name.
-data Tag = Definition | Lemma | Theorem | Proof | Claim | Example | Assumption
+data Tag = Definition | Lemma | Theorem | Proof | Claim | Example | Assumption | Proposition
     deriving (Show, Eq)
 
 -- Aliases for terms in a DefinitionList.
@@ -89,44 +89,44 @@ makeDelimiters tagText nameText rest =
 -- TODO: Allow the user to define their own aliases in frontmatter.
 parseTag :: Text -> Maybe Tag
 parseTag txt = case txt of
-    "Claim"      -> Just Claim
-    "Def"        -> Just Definition
-    "Definition" -> Just Definition
-    "Lemma"      -> Just Lemma
-    "Pf"         -> Just Proof
-    "Proof"      -> Just Proof
-    "Thm"        -> Just Theorem
-    "Theorem"    -> Just Theorem
-    "Ex"         -> Just Example
-    "Example"    -> Just Example
-    "Assumption" -> Just Assumption
-    _            -> Nothing
+    "Claim"       -> Just Claim
+    "Def"         -> Just Definition
+    "Definition"  -> Just Definition
+    "Lemma"       -> Just Lemma
+    "Pf"          -> Just Proof
+    "Proof"       -> Just Proof
+    "Thm"         -> Just Theorem
+    "Theorem"     -> Just Theorem
+    "Ex"          -> Just Example
+    "Example"     -> Just Example
+    "Assumption"  -> Just Assumption
+    "Prop"        -> Just Proposition
+    "Proposition" -> Just Proposition
+    _             -> Nothing
 
 -- Maps a Tag to the corresponding environment name (the `foo` in `\begin{foo}`).
 getLatexEnvName :: Tag -> Text
 getLatexEnvName e = case e of
-    Claim      -> "claim"
-    Definition -> "definition"
-    Lemma      -> "lemma"
-    Proof      -> "proof"
-    Theorem    -> "theorem"
-    Example    -> "example"
-    Assumption -> "assumption"
+    Claim       -> "claim"
+    Definition  -> "definition"
+    Lemma       -> "lemma"
+    Proof       -> "proof"
+    Theorem     -> "theorem"
+    Example     -> "example"
+    Assumption  -> "assumption"
+    Proposition -> "proposition"
 
 -- Splits term text into the metadata of a LaTeX environment.
--- TODO: Add support for nested parens, e.g. "Definition (O(n) runtime)."
 splitTerm :: Seq Inline -> (Seq Inline, Seq Inline, Seq Inline)
 splitTerm xs =
-    let (tag, xs') = S.breakl opensParen withoutPeriods
-    in  case splitAfter closesParen xs' of
-            (S.Empty, S.Empty) -> (tag, S.Empty, S.Empty)
-            (name   , xs''   ) -> (tag, trimParens name, xs'')
+    let (tagName, rest) = splitAfter (checkStr (T.isSuffixOf ".")) xs
+    in  case S.breakl opensParen tagName of
+            (tag, S.Empty) -> (withoutPeriods tag, S.Empty, rest)
+            (tag, name   ) -> (tag, trimParens . withoutPeriods $ name, rest)
   where
-    withoutPeriods = fmap (dropSuffix ".") xs
+    withoutPeriods = fmap (dropSuffix ".")
     opensParen :: Inline -> Bool
     opensParen = checkStr (T.isPrefixOf "(")
-    closesParen :: Inline -> Bool
-    closesParen = checkStr (T.isSuffixOf ")")
 
 checkStr :: (Text -> Bool) -> Inline -> Bool
 checkStr f (Str s) = f s
